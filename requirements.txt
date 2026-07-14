@@ -1,0 +1,2 @@
+langchain\nlangchain-openai\npython-dotenv\nduckduckgo-search\nwikipedia\n
+pytest
