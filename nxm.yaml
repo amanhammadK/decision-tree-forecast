@@ -1,0 +1,57 @@
+schema_version: "3.0"
+id: "nxm.agent.market-research-agent"
+name: "Market Research Agent"
+version: "1.2.0"
+type: "agent"
+description: "Autonomously searches competitor web interfaces and generates market positioning reports."
+
+marketplace:
+  enabled: true
+  pricing:
+    currency: "USDC"
+    amount: 100.00
+    model: "one-time"
+  tags:
+    - "marketing"
+    - "competitor-analysis"
+    - "agentic"
+  min_reputation_tier: 2
+
+runtime:
+  language: "python"
+  version: ">=3.11"
+  entrypoint: "poetry run python -m src.main"
+  port: 8080
+  docker:
+    file: "./Dockerfile"
+    target: "release"
+  resources:
+    cpu: "500m"
+    memory: "512Mi"
+
+dependencies:
+  sdk:
+    name: "nxm-mastermind-sdk"
+    version: "^1.0.0"
+  backing_services:
+    - name: "postgres"
+      version: "^15.0"
+    - name: "redis"
+      version: "^7.0"
+    - name: "rabbitmq"
+      version: "^3.11"
+  external_apis:
+    - name: "openai"
+      optional: false
+    - name: "serpapi"
+      optional: true
+
+security:
+  vault_policies:
+    - "nxm-agent-base"
+    - "nxm-postgres-readwrite"
+  entitlements:
+    - "network:outbound"
+    - "storage:readwrite"
+    - "secret:token-provisioner"
+  opa_policy_path: "./deploy/opa/policy.rego"

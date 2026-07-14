@@ -1,0 +1,123 @@
+name: Build and Publish Secure Container Image
+
+on:
+  workflow_call:
+    inputs:
+      image_name:
+        required: true
+        type: string
+        description: "Name of the target container image (excluding registry prefix)"
+      dockerfile_path:
+        required: false
+        type: string
+        default: "./Dockerfile"
+        description: "Path to the Dockerfile to compile"
+    outputs:
+      image_digest:
+        description: "The signed container image digest"
+        value: ${{ jobs.build-and-sign.outputs.digest }}
+
+permissions:
+  contents: read
+  packages: write
+  id-token: write  # Critical for Cosign keyless signing via OIDC
+
+jobs:
+  build-and-sign:
+    runs-on: ubuntu-latest
+    outputs:
+      digest: ${{ steps.build-push.outputs.digest }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # 1. Dependency and Static Analysis Vulnerability Scan via Trivy (FS Mode)
+      - name: Source Security Scan (Trivy FS)
+        uses: aquasecurity/trivy-action@0.18.0
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH'
+
+      # Upload scan results to GitHub Security Center
+      - name: Upload Trivy Scan Results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+          category: 'Trivy Source Vulnerability Scan'
+
+      # 2. Setup QEMU & Docker Buildx
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # 3. Authenticate with GitHub Container Registry
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Step to lowercase the repository owner
+      - name: Lowercase Repository Owner
+        id: owner
+        run: |
+          echo "owner=${OWNER,,}" >> "$GITHUB_OUTPUT"
+        env:
+          OWNER: ${{ github.repository_owner }}
+
+      # 4. Generate Metadata (Tags, Labels)
+      - name: Extract Metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ steps.owner.outputs.owner }}/${{ inputs.image_name }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=sha,format=long
+            type=raw,value=latest
+
+      # 5. Build and Push Image
+      - name: Build and Push Docker Image
+        id: build-push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ${{ inputs.dockerfile_path }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # 6. Generate SBOM using Syft
+      - name: Generate SBOM (Syft)
+        uses: anchore/sbom-action@v0.15.8
+        with:
+          image: ghcr.io/${{ steps.owner.outputs.owner }}/${{ inputs.image_name }}@${{ steps.build-push.outputs.digest }}
+          format: 'spdx-json'
+          output-file: 'sbom.spdx.json'
+          upload-release-assets: false
+
+      # 7. Install Cosign
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@v3.4.0
+
+      # 8. Keyless Container Signing & SBOM Attestation
+      - name: Sign Container and Attest SBOM
+        env:
+          COSIGN_EXPERIMENTAL: "true"
+        run: |
+          IMAGE_REF="ghcr.io/${{ steps.owner.outputs.owner }}/${{ inputs.image_name }}@${{ steps.build-push.outputs.digest }}"
+          
+          # Sign the container image
+          cosign sign --yes "$IMAGE_REF"
+          
+          # Attest the SBOM to the image
+          cosign attest --yes --predicate sbom.spdx.json --type spdx "$IMAGE_REF"

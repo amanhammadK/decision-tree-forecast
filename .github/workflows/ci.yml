@@ -1,19 +1,79 @@
-name: CI
+name: Python CI/CD
 
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+  workflow_call:
+    inputs:
+      python-version:
+        type: string
+        default: "3.11"
+        required: false
+        description: "Python version to use"
+      pytest-args:
+        type: string
+        default: ""
+        required: false
+        description: "Arguments to pass to pytest"
 
 jobs:
-  test:
+  test-lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
-      - run: pip install -r requirements.txt
-      - run: pip install pytest
-      - run: pytest tests/ -v
+          python-version: ${{ inputs.python-version }}
+          cache: "pip"
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f pyproject.toml ]; then
+            pip install .[test] || pip install .
+          elif [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          fi
+          pip install ruff pytest pytest-cov jsonschema pyyaml
+
+      - name: Validate nxm.yaml
+        run: |
+          python -c "
+          import json, yaml, sys, os
+          from jsonschema import validate
+          try:
+              if not os.path.exists('nxm.yaml'):
+                  raise FileNotFoundError('nxm.yaml not found')
+              with open('nxm.yaml') as f:
+                  data = yaml.safe_load(f)
+              schema_url = 'https://raw.githubusercontent.com/nxm/nxm-ci-templates/main/schemas/nxm.schema.json'
+              schema_paths = ['schemas/nxm.schema.json', 'nxm-ci-templates/schemas/nxm.schema.json']
+              schema = None
+              for path in schema_paths:
+                  if os.path.exists(path):
+                      with open(path) as sf:
+                          schema = json.load(sf)
+                      break
+              if schema is None:
+                  import urllib.request
+                  try:
+                      with urllib.request.urlopen(schema_url, timeout=5) as response:
+                          schema = json.loads(response.read().decode())
+                  except Exception as url_err:
+                      raise FileNotFoundError(f'Schema file not found locally at paths {schema_paths} and failed to download from {schema_url}: {url_err}')
+              validate(instance=data, schema=schema)
+              print('nxm.yaml is valid.')
+          except Exception as e:
+              print(f'Validation failed: {e}')
+              sys.exit(1)
+          "
+
+      - name: Lint and Format with Ruff
+        run: |
+          ruff check .
+          ruff format --check .
+
+      - name: Run PyTest
+        run: |
+          pytest ${{ inputs.pytest-args }} --cov=src --cov-report=xml --cov-report=term-missing --junitxml=junit.xml
