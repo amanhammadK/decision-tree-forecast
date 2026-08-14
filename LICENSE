@@ -1,21 +1,49 @@
-MIT License
+SOFTWARE LICENSE AGREEMENT (COMMERCIAL)
 
-Copyright (c) 2026 NxM Mastermind Ecosystem
+Copyright (c) 2026 Aman Hammad
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+This is a legal agreement between you ("Licensee") and the copyright holder
+("Licensor") governing your use of this software and associated documentation
+files (the "Software").
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+1. GRANT OF LICENSE
+   Licensor grants Licensee a non-exclusive, non-transferable, revocable
+   license to use, modify, and deploy the Software for Licensee's own
+   internal business or personal projects, including commercial projects.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+2. PERMITTED USES
+   - Use the Software in your own products and services
+   - Modify the Software for your own needs
+   - Deploy the Software for your own customers
+   - Combine the Software with your own code
+
+3. RESTRICTIONS
+   Licensee may NOT:
+   - Resell, redistribute, sublicense, or republish the Software, in whole
+     or in part, as a standalone product or as part of a competing offering
+   - Grant others the right to use the Software for their own projects
+   - Remove or alter any copyright notices
+   - Use the Software to create a product that directly competes with the
+     original Software
+
+4. ONE LICENSE PER PROJECT
+   A separate license is required for each project or product that uses the
+   Software. A project means a single codebase deployed for a single
+   customer or organization.
+
+5. NO WARRANTY
+   The Software is provided "AS IS" without warranty of any kind, express or
+   implied, including but not limited to warranties of merchantability,
+   fitness for a particular purpose, or non-infringement.
+
+6. LIMITATION OF LIABILITY
+   In no event shall Licensor be liable for any damages arising from the use
+   or inability to use the Software, even if advised of the possibility of
+   such damages.
+
+7. TERMINATION
+   This license terminates automatically if Licensee breaches any term.
+   Upon termination, Licensee must cease all use and delete all copies.
+
+By using the Software, Licensee acknowledges that they have read and agree
+to the terms of this agreement.
