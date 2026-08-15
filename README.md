@@ -3,4 +3,4 @@
 Enterprise-grade agent solution.
 
 ## License
-NxM Premium Commercial License. Unauthorized use prohibited.
+Commercial License. Unauthorized use prohibited.
