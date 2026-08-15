@@ -3,6 +3,7 @@ import math
 import statistics
 import random
 from collections import Counter, defaultdict
+import json
 from datetime import datetime
 
 
@@ -323,7 +324,6 @@ def processItem(input_str, params=None):
     }
 
 
-import json
 
 if __name__ == "__main__":
     X = [[1, 2], [3, 4], [5, 6], [7, 8], [2, 3], [4, 5]]
